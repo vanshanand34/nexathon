@@ -7,33 +7,31 @@ import { LANGUAGES, DEFAULT_CODE_SNIPPETS } from "@/components/constants";
 function App() {
     const [language, setLanguage] = useState("javascript");
     const [code, setCode] = useState(DEFAULT_CODE_SNIPPETS["javascript"]);
-    const [stdin, setStdin] = useState("");
     const [output, setOutput] = useState("");
+    const [stdin, setStdin] = useState("");
 
     useEffect(() => {
         setCode(DEFAULT_CODE_SNIPPETS[language] || "");
-        setStdin("");
-        setOutput("");
     }, [language]);
 
     const handleRun = async () => {
         try {
             const res = await axios.post("https://emkc.org/api/v2/piston/execute", {
                 language,
-                version: LANGUAGES[language],
                 files: [{ content: code }],
                 stdin,
+                version: LANGUAGES[language],
             });
-            setOutput(res.data?.run?.output || "No output");
+            setOutput(res.data?.run?.output || "");
         } catch (err) {
             setOutput("Error running code");
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white p-4 space-y-4">
-            <header className="text-3xl font-bold text-center py-4">
-                <div className="bg-white p-4 rounded-md text-gray-700 dark:bg-gray-800 dark:text-white">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white p-4 space-y-4">
+            <header className="text-3xl font-bold text-center py-4 flex items-center justify-center">
+                <div className="bg-white p-4 rounded-md text-gray-700">
                     Code Editor
                 </div>
             </header>
@@ -58,8 +56,9 @@ function App() {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="h-[400px] border border-gray-300 rounded-md overflow-hidden">
+            <div className="flex flex-col md:flex-row gap-4" style={{ height: "calc(100vh - 160px)" }}>
+                {/* Editor */}
+                <div className="w-full md:w-1/2 h-full border border-gray-300 rounded-md overflow-hidden">
                     <Editor
                         height="100%"
                         theme="vs-dark"
@@ -69,18 +68,21 @@ function App() {
                     />
                 </div>
 
-                <div className="space-y-4">
-                    <div className="p-4 border border-gray-300 rounded-md bg-white dark:bg-gray-800">
+                {/* Input + Output */}
+                <div className="w-full md:w-1/2 flex flex-col gap-4 h-full">
+                    {/* Stdin */}
+                    <div className="flex-1 flex flex-col p-4 border border-gray-300 rounded-md bg-white dark:bg-gray-800 min-h-0">
                         <h2 className="font-semibold mb-2">Input (stdin)</h2>
                         <textarea
-                            className="w-full h-32 p-2 border border-gray-300 rounded-md bg-gray-100 dark:bg-gray-900 dark:text-white"
+                            className="flex-1 w-full p-2 border border-gray-300 rounded-md bg-gray-100 dark:bg-gray-900 dark:text-white resize-none overflow-auto min-h-0"
                             placeholder="Enter input data here..."
                             value={stdin}
                             onChange={(e) => setStdin(e.target.value)}
                         />
                     </div>
 
-                    <div className="p-4 border border-gray-300 rounded-md bg-white dark:bg-gray-800">
+                    {/* Output */}
+                    <div className="flex-1 p-4 border border-gray-300 rounded-md bg-white dark:bg-gray-800 overflow-auto min-h-0">
                         <h2 className="font-semibold mb-2">Output</h2>
                         <pre className="whitespace-pre-wrap">{output}</pre>
                     </div>

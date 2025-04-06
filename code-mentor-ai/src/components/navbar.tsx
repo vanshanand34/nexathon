@@ -26,7 +26,7 @@ export default function NavBar() {
 
   return (
     <div
-      className={`${geistRegular.className} bg-white dark:bg-[#0e0e0e] dark:shadow-gray-950 text-black dark:text-white w-[100vw] flex justify-between shadow shadow-gray-300 gap-2 p-1 pt-2`}
+      className={`${geistRegular.className} bg-white dark:bg-[#0e0e0e] dark:shadow-gray-950 text-black dark:text-white w-[100vw] flex justify-between shadow-lg shadow-black gap-2 p-1 pt-2`}
     >
       <div className="font-bold uppercase text-2xl flex items-center p-2 cursor-pointer dark:hover:text-gray-300">
         Code-Mentor
