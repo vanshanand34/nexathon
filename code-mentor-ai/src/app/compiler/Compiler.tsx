@@ -9,6 +9,7 @@ function App() {
     const [code, setCode] = useState(DEFAULT_CODE_SNIPPETS["javascript"]);
     const [output, setOutput] = useState("");
     const [stdin, setStdin] = useState("");
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         setCode(DEFAULT_CODE_SNIPPETS[language] || "");
@@ -16,6 +17,7 @@ function App() {
 
     const handleRun = async () => {
         try {
+            setLoading(true);
             const res = await axios.post("https://emkc.org/api/v2/piston/execute", {
                 language,
                 files: [{ content: code }],
@@ -25,11 +27,13 @@ function App() {
             setOutput(res.data?.run?.output || "");
         } catch (err) {
             setOutput("Error running code");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white p-4 space-y-4">
+        <div className="min-h-screen pt-20 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white p-4 space-y-4">
             <header className="text-3xl font-bold text-center py-4 flex items-center justify-center">
                 <div className="bg-white p-4 rounded-md text-gray-700">
                     Code Editor
@@ -49,11 +53,21 @@ function App() {
                     ))}
                 </select>
                 <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 cursor-pointer flex items-center justify-center gap-2 min-w-[120px]"
                     onClick={handleRun}
+                    disabled={loading}
                 >
-                    Run Code
+                    {loading && (
+                        <svg className="mr-3 -ml-1 size-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4">
+                            </circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    )}
+                    <span>{loading ? 'Running...' : 'Run Code'}</span>
                 </button>
+
+
             </div>
 
             <div className="flex flex-col md:flex-row gap-4" style={{ height: "calc(100vh - 160px)" }}>
