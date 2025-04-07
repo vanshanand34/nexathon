@@ -33,14 +33,14 @@ function App() {
     };
 
     return (
-        <div className="min-h-screen pt-20 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white p-4 space-y-4">
+        <div className="min-h-screen pt-24  text-gray-900 dark:text-white p-4 space-y-4">
             <header className="text-3xl font-bold text-center py-4 flex items-center justify-center">
-                <div className="bg-white p-4 rounded-md text-gray-700">
-                    Code Editor
+                <div className="bg-white dark:bg-inherit dark:outline dark:outline-white p-4 rounded-md text-gray-700 dark:text-white">
+                    Code Compiler
                 </div>
             </header>
 
-            <div className="flex justify-center gap-4">
+            <div className="flex justify-center gap-4 py-4">
                 <select
                     className="px-4 py-2 border rounded-md bg-white dark:bg-gray-800"
                     value={language}
@@ -70,7 +70,7 @@ function App() {
 
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4" style={{ height: "calc(100vh - 160px)" }}>
+            <div className="flex flex-col px-4 md:px-1 md:flex-row gap-4" style={{ height: "calc(100vh - 160px)" }}>
                 {/* Editor */}
                 <div className="w-full md:w-1/2 h-full border border-gray-300 rounded-md overflow-hidden">
                     <Editor

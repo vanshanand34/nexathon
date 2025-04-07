@@ -65,7 +65,7 @@ export default function Home() {
   return (
     <div className="min-h-screen pt-24">
       <div className="w-full mx-auto p-8">
-        <h1 className="text-4xl font-bold mb-8 text-gray-800">Code Reviewer</h1>
+        <h1 className="text-4xl font-bold mb-8 text-gray-800 dark:text-white">Code Reviewer</h1>
 
         <div className="bg-white p-8 rounded-lg shadow-md">
           <div className="flex items-center mb-6">
@@ -89,10 +89,10 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="w-full grid grid-cols-2 gap-8">
+          <div className="w-full grid md:grid-cols-2 gap-8">
             {/* Syntax-highlighted Code Editor */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Code</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-white">Code</label>
               <div className="rounded-md bg-gray-900 text-white border border-gray-700 min-h-[70vh]">
                 <Editor
                   value={formData.code}
@@ -109,7 +109,7 @@ export default function Home() {
 
             {/* Description Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-white">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -139,7 +139,7 @@ export default function Home() {
             </div>
 
             <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-700">Suggestions</h3>
+              <h3 className="text-lg font-medium text-gray-700 ">Suggestions</h3>
               {reviewResult.suggestions.length > 0 ? (
                 <ul className="list-disc list-inside text-gray-600">
                   {reviewResult.suggestions.map((s, i) => (
