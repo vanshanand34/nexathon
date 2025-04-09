@@ -1,19 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@tailwind base;
+@tailwind utilities;
+@tailwind components;
 
-@import "tailwindcss";
-
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  overflow-x: hidden;
-  background-color: #ffffff;
-  color: #000000;
-}
-
-html.dark body {
-  background-color: #0e0e0e;
-  color: #ffffff;
+@theme {
+  --primary-color: #1a202c;
+  --font-heading: 'Inter', sans-serif;
 }
