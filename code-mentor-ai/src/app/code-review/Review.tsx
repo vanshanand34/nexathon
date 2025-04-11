@@ -35,6 +35,7 @@ export default function Home() {
   const [reviewResult, setReviewResult] = useState<CodeReviewResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const languages = ['javascript', 'python', 'java', 'typescript'];
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -64,35 +65,35 @@ export default function Home() {
 
   return (
     <div className="min-h-screen pt-24">
-      <div className="w-full mx-auto p-8">
-        <h1 className="text-4xl font-bold mb-8 text-gray-800 dark:text-white">Code Reviewer</h1>
+      <div className="w-full mx-auto p-8 md:px-32">
+        <h1 className="text-4xl text-center py-4 font-bold mb-8 text-gray-800 dark:text-white">Code Reviewer</h1>
 
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <div className="flex items-center mb-6">
-            <select
-              value={formData.language}
-              onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-              className="p-3 rounded-md bg-gray-100 text-gray-800 border border-gray-300"
-            >
-              <option value="javascript">JavaScript</option>
-              <option value="python">Python</option>
-              <option value="java">Java</option>
-              <option value="typescript">TypeScript</option>
-            </select>
-            <button
-              type="submit"
-              onClick={handleSubmit}
-              disabled={loading}
-              className="ml-6 px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-            >
-              {loading ? 'Reviewing...' : 'Get Review'}
-            </button>
-          </div>
+        <div className="flex items-center justify-center gap-x-6 auto-rows-[1fr] pb-8">
+          <select
+            value={formData.language}
+            onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+            className="p-3 rounded-md bg-gray-100 text-gray-800 border border-gray-300"
+          >
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="typescript">TypeScript</option>
+          </select>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="ml-6 px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+          >
+            {loading ? 'Reviewing...' : 'Get Review'}
+          </button>
+        </div>
 
-          <div className="w-full grid md:grid-cols-2 gap-8">
+        <div className="bg-white dark:bg-gray-700 p-8 rounded-lg border shadow-lg">
+          <div className="w-full grid md:grid-cols-1 gap-8">
             {/* Syntax-highlighted Code Editor */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-white">Code</label>
+              <label className="block text-sm md:text-lg px-2 font-medium text-gray-700 mb-2 dark:text-white">Code</label>
               <div className="rounded-md bg-gray-900 text-white border border-gray-700 min-h-[70vh]">
                 <Editor
                   value={formData.code}
@@ -101,7 +102,7 @@ export default function Home() {
                     Prism.highlight(code, Prism.languages[formData.language], formData.language)
                   }
                   padding={16}
-                  className="focus:outline-none text-sm font-mono min-h-[70vh]"
+                  className="focus:outline-none focus:border-0 text-sm font-mono min-h-[70vh]"
                   placeholder="Enter your code here..."
                 />
               </div>
@@ -109,14 +110,15 @@ export default function Home() {
 
             {/* Description Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-white">Description</label>
+              <label className="block text-sm md:text-base px-2 font-medium text-gray-700 mb-2 dark:text-white">Description</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full h-80 p-4 rounded-md bg-gray-100 text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-60 p-4 rounded-md bg-gray-100 text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter a description of your code..."
                 required
               />
+
             </div>
           </div>
         </div>
