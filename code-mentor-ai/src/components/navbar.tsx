@@ -38,7 +38,7 @@ export default function Navbar() {
   return (
     <div
       className={`${geistRegular.className} z-10 fixed w-[100vw] flex justify-between 
-            gap-2 p-1 pt-2 bg-white dark:bg-[#0e0e0e] 
+            gap-2 p-1 pt-2 md:p-2 md:pt-3 bg-white dark:bg-[#0e0e0e] 
             shadow shadow-gray-400 dark:shadow-gray-700 text-black dark:text-white `}
     >
       <div
@@ -47,7 +47,7 @@ export default function Navbar() {
         Code-Mentor
       </div>
 
-      <div className="hidden lg:flex items-center gap-4 lg:gap-12 pr-12 py-2">
+      <div className="hidden md:flex items-center gap-4 lg:gap-12 pr-12 py-2">
         <Link href={"/"}>
           <NavBarComponent componentText="Home" />
         </Link>
@@ -68,7 +68,8 @@ export default function Navbar() {
       {/* toggle Sidebar icon */}
       <div
         onClick={() => setIsSidebarOpen(true)}
-        className="pr-4 xs:pr-12 py-2 text-2xl cursor-pointer lg:hidden" >
+        className="pr-8 md:pr-12 py-2 text-2xl cursor-pointer lg:hidden 
+        hover:text-gray-700 dark:hover:text-gray-400" >
         &#8801;
       </div>
 
