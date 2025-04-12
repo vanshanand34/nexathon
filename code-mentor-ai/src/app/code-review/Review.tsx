@@ -65,14 +65,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen pt-24">
-      <div className="w-full mx-auto p-8 md:px-32">
-        <h1 className="text-4xl text-center py-4 font-bold mb-8 text-gray-800 dark:text-white">Code Reviewer</h1>
+      <div className="w-full p-4 sm:p-8 md:px-32">
+        <h1
+          className="text-2xl sm:text-4xl text-center py-4 font-bold mb-8 text-gray-800 dark:text-white"
+        >
+          Code Reviewer
+        </h1>
 
         <div className="flex items-center justify-center gap-x-6 auto-rows-[1fr] pb-8">
           <select
             value={formData.language}
             onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-            className="p-3 rounded-md bg-gray-100 text-gray-800 border border-gray-300"
+            className="px-3 py-2 sm:p-3 text-sm sm:text-base rounded-md bg-gray-100 text-gray-800 border border-gray-300"
           >
             <option value="javascript">JavaScript</option>
             <option value="python">Python</option>
@@ -83,18 +87,22 @@ export default function Home() {
             type="submit"
             onClick={handleSubmit}
             disabled={loading}
-            className="ml-6 px-6 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+            className="px-3 py-2 sm:px-6 sm:py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
           >
             {loading ? 'Reviewing...' : 'Get Review'}
           </button>
         </div>
 
-        <div className="bg-white dark:bg-gray-700 p-8 rounded-lg border shadow-lg">
-          <div className="w-full grid md:grid-cols-1 gap-8">
+        <div className="">
+          <div className="w-full grid md:grid-cols-1 gap-y-4 md:gap-8">
             {/* Syntax-highlighted Code Editor */}
-            <div>
-              <label className="block text-sm md:text-lg px-2 font-medium text-gray-700 mb-2 dark:text-white">Code</label>
-              <div className="rounded-md bg-gray-900 text-white border border-gray-700 min-h-[70vh]">
+            <div className='bg-white dark:bg-gray-800 shadow rounded-lg border'>
+              <label
+                className="block text-base sm:text-lg md:text-xl px-4 md:px-8 pt-4 md:pt-6 font-medium text-gray-700 mb-2 dark:text-white"
+              >
+                Code
+              </label>
+              <div className="rounded-md text-white min-h-[70vh] p-3 md:p-6">
                 <Editor
                   value={formData.code}
                   onValueChange={(code) => setFormData({ ...formData, code })}
@@ -102,22 +110,26 @@ export default function Home() {
                     Prism.highlight(code, Prism.languages[formData.language], formData.language)
                   }
                   padding={16}
-                  className="focus:outline-none focus:border-0 text-sm font-mono min-h-[70vh]"
+                  className="focus:outline-none focus:border-0 outline outline-1 rounded-lg 
+                  text-sm font-mono min-h-[70vh] bg-gray-900"
                   placeholder="Enter your code here..."
                 />
               </div>
             </div>
 
             {/* Description Input */}
-            <div>
-              <label className="block text-sm md:text-base px-2 font-medium text-gray-700 mb-2 dark:text-white">Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full h-60 p-4 rounded-md bg-gray-100 text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter a description of your code..."
-                required
-              />
+            <div className='shadow bg-white dark:bg-gray-800 rounded-lg border'>
+              <label className="block px-4 md:px-8 py-2 pt-4 md:pt-6 text-base sm:text-lg md:text-xl font-medium text-gray-700 dark:text-white ">Description</label>
+              <div className="p-3 md:p-6">
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full h-60 p-4 rounded-md bg-gray-900 text-gray-800 border border-gray-300 focus:outline-none focus:ring-0 focus:ring-blue-500"
+                  placeholder="Enter a description of your code..."
+                  required
+                />
+              </div>
+
 
             </div>
           </div>
