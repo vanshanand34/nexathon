@@ -67,9 +67,10 @@ export default function Home() {
     <div className="min-h-screen pt-24">
       <div className="w-full p-4 sm:p-8 md:px-32">
         <h1
-          className="text-2xl sm:text-4xl text-center py-4 font-bold mb-8 text-gray-800 dark:text-white"
+          className="text-2xl sm:text-4xl flex justify-center py-4 pb-8 
+          font-bold text-gray-800 dark:text-white"
         >
-          Code Reviewer
+          <div className='w-fit p-3 md:p-5 rounded-md bg-gray-200 dark:bg-gray-800 shadow' >Code Reviewer</div>
         </h1>
 
         <div className="flex items-center justify-center gap-x-6 auto-rows-[1fr] pb-8">

@@ -37,7 +37,7 @@ function App() {
 
     return (
         <div className="min-h-screen pt-24 text-gray-900 dark:text-white p-4 md:px-12 space-y-4 pb-12">
-            <header className="text-3xl font-bold text-center py-4 flex items-center justify-center">
+            <header className="text-xl md:text-3xl font-bold text-center py-4 flex items-center justify-center">
                 <div className="bg-gray-100 dark:bg-inherit dark:outline dark:outline-1 dark:outline-[#fff5] p-4 rounded-md text-gray-700 dark:text-white">
                     Code Compiler
                 </div>
@@ -45,7 +45,7 @@ function App() {
 
             <div className="flex justify-center gap-4 py-4">
                 <div
-                    className="relative flex justify-between items-center w-36 px-4 cursor-pointer py-2 border dark:border-[#fff5] rounded-md bg-white dark:bg-gray-800 shadow"
+                    className="relative flex justify-between items-center w-32 md:w-36 px-2 md:px-4 cursor-pointer py-2 border dark:border-[#fff5] rounded-md bg-white dark:bg-gray-800 shadow"
                     onClick={() => setIsDropdownCollapsed(prev => !prev)}
                 >
                     {language}
@@ -67,8 +67,8 @@ function App() {
                     </svg>
                 </div>
                 <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
-                    cursor-pointer flex items-center justify-center gap-2 min-w-[120px] shadow"
+                    className="px-3 md:px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 
+                    cursor-pointer flex items-center justify-center md:gap-2 shadow"
                     onClick={handleRun}
                     disabled={loading}
                 >
