@@ -65,7 +65,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen pt-24">
-      <div className="w-full p-4 sm:p-8 md:px-32">
+      <div className="w-full p-2 sm:p-8 md:px-32">
         <h1
           className="text-2xl sm:text-4xl flex justify-center py-4 pb-8 
           font-bold text-gray-800 dark:text-white"
@@ -112,7 +112,7 @@ export default function Home() {
                   }
                   padding={16}
                   className="focus:outline-none focus:border-0 outline outline-1 rounded-lg 
-                  text-sm font-mono min-h-[70vh] bg-gray-900"
+                  text-sm md:text-base font-mono min-h-[70vh] bg-gray-900"
                   placeholder="Enter your code here..."
                 />
               </div>
@@ -125,7 +125,7 @@ export default function Home() {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full h-60 p-4 rounded-md bg-gray-900 text-gray-800 border border-gray-300 focus:outline-none focus:ring-0 focus:ring-blue-500"
+                  className="w-full h-60 p-4 rounded-md bg-gray-900 border border-gray-300 focus:outline-none focus:ring-0 focus:ring-blue-500 text-white"
                   placeholder="Enter a description of your code..."
                   required
                 />
@@ -145,7 +145,7 @@ export default function Home() {
 
         {/* Results */}
         {reviewResult && (
-          <div className="mt-8 bg-white p-8 rounded-lg shadow-md">
+          <div className="mt-8 bg-white p-4 md:p-8 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold text-gray-800 mb-6">Review Results</h2>
 
             <div className="mb-6">
@@ -194,6 +194,7 @@ export default function Home() {
 
             <div>
               <h3 className="text-lg font-medium text-gray-700">Refactored Code</h3>
+              <div className='text-sm md:text-base'>
               <SyntaxHighlighter
                 language={formData.language}
                 style={docco}
@@ -208,6 +209,7 @@ export default function Home() {
               >
                 {reviewResult.refactoredCode}
               </SyntaxHighlighter>
+              </div>
             </div>
           </div>
         )}
