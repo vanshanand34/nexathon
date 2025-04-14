@@ -1,18 +1,12 @@
 // app/api/code-review/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
-// Environment variable for Hugging Face API token
-const HF_API_TOKEN = process.env.HF_API_TOKEN;
-const HF_API_URL = "https://api-inference.huggingface.co/models/bigcode/starcoder";
-
-// Interface for request body
 export interface CodeReviewRequest {
     code: string;
     language: string;
     description: string;
 }
 
-// Interface for review response
 export interface CodeReviewResponse {
     review: string;
     suggestions: string[];
@@ -21,21 +15,16 @@ export interface CodeReviewResponse {
     refactoredCode: string;
 }
 
-// Function to call Hugging Face API for code review
+const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
+const MODEL_VERSION_ID = "meta/meta-llama-3-8b-instruct"; // Chosen for cost-effective high-volume use
+
 export async function getAIReview(code: string, language: string, description: string): Promise<CodeReviewResponse> {
-    if (!HF_API_TOKEN) {
-        throw new Error("Hugging Face API token is not configured");
+    if (!REPLICATE_API_TOKEN) {
+        throw new Error("Replicate API token is not configured");
     }
 
     try {
-        const response = await fetch(HF_API_URL, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${HF_API_TOKEN}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                inputs: `You are an expert code reviewer with deep knowledge of ${language}. Review the following code based on the provided description and return a detailed analysis in the exact format specified below. Be thorough, specific, and actionable in your feedback. Consider best practices, performance, readability, maintainability, and security.
+        const prompt = `You are an expert code reviewer with deep knowledge of ${language}. Review the following code based on the provided description and return a detailed analysis in the exact format specified below. Be thorough, specific, and actionable in your feedback.
 
 Language: ${language}
 Description: ${description}
@@ -43,60 +32,87 @@ Code:
 ${code}
 
 Respond in this exact format:
-1. Code Review: [Provide a detailed paragraph reviewing the code's quality, structure, and adherence to best practices for ${language}. Mention specific strengths and weaknesses.]
-2. Suggestions:
-   - [Specific, actionable suggestion 1 with explanation]
-   - [Specific, actionable suggestion 2 with explanation]
-   - [Add more as needed, or leave empty if none]
+1.Code Review: [Detailed review]
+2.Suggestions:
+   - [Suggestion 1]
+   - [Suggestion 2]
 3. Potential Bugs:
-   - [Specific potential bug 1 with line number if applicable and explanation]
-   - [Specific potential bug 2 with line number if applicable and explanation]
-   - [Add more as needed, or leave empty if none]
+   - [Bug 1]
 4. Security Issues:
-   - [Specific security issue 1 with explanation and potential impact]
-   - [Specific security issue 2 with explanation and potential impact]
-   - [Add more as needed, or leave empty if none]
+   - [Issue 1]
 5. Refactored Code:
-[Provide the complete refactored code with improvements applied. If no changes are needed, return the original code unchanged. Include comments explaining changes.]`,
-                parameters: {
-                    max_new_tokens: 1000,
-                    temperature: 0.5,
-                    return_full_text: false,
-                },
-            }),
+[Refactored code here]`;
+
+        const predictionResponse = await fetch("https://api.replicate.com/v1/predictions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Token ${REPLICATE_API_TOKEN}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                version: MODEL_VERSION_ID,
+                input: {
+                    prompt,
+                    temperature: 0.2,
+                    top_p: 0.9,
+                    max_new_tokens: 1024
+                }
+            })
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Hugging Face API error: ${response.status} - ${errorText}`);
+        const predictionData = await predictionResponse.json();
+        const predictionUrl = predictionData.urls.get;
+
+        let resultText = "";
+        while (true) {
+            const res = await fetch(predictionUrl, {
+                headers: { "Authorization": `Token ${REPLICATE_API_TOKEN}` }
+            });
+            const status = await res.json();
+            if (status.status === "succeeded") {
+                console.log("Replicate prediction succeeded", status, status.output);
+                resultText = "";
+                for (const output of status.output) {
+                    resultText += output;
+                }
+                console.log(resultText);
+                break;
+            } else if (status.status === "failed") {
+                throw new Error("Replicate prediction failed");
+            }
+            await new Promise(r => setTimeout(r, 1000));
         }
 
-        const result: { generated_text: string }[] = await response.json();
-        const aiResponse = result[0]?.generated_text ?? "No response generated";
+        const matchSection = (labels: string[], fallback = ''): string => {
+            for (const label of labels) {
+                const regex = new RegExp(`${label}([\\s\\S]*?)(?=\\n\\s*(\\*\\*|\\d+\\.\\s|$))`, 'i');
+                const match = resultText.match(regex);
+                if (match) return match[1].trim();
+            }
+            return fallback;
+        };
 
-        // Adjusted regex without 's' flag - using [\s\S]* to match across newlines
-        const reviewMatch = aiResponse.match(/1\. Code Review: ([\s\S]*?)(?=2\. Suggestions)/);
-        const suggestionsMatch = aiResponse.match(/2\. Suggestions:([\s\S]*?)(?=3\. Potential Bugs)/);
-        const bugsMatch = aiResponse.match(/3\. Potential Bugs:([\s\S]*?)(?=4\. Security Issues)/);
-        const securityMatch = aiResponse.match(/4\. Security Issues:([\s\S]*?)(?=5\. Refactored Code)/);
-        const refactoredMatch = aiResponse.match(/5\. Refactored Code:([\s\S]*)/);
+        const review = matchSection(['1\\. Code Review:', '\\*\\*Code Review:\\*\\*']);
+        const suggestionsText = matchSection(['2\\. Suggestions:', '\\*\\*Suggestions:\\*\\*']);
+        const bugsText = matchSection(['3\\. Potential Bugs:', '\\*\\*Potential Bugs:\\*\\*']);
+        const securityText = matchSection(['4\\. Security Issues:', '\\*\\*Security Issues:\\*\\*']);
+        const refactoredCode = matchSection(['5\\. Refactored Code:', '\\*\\*Refactored Code:\\*\\*'], code);
 
-        const parseList = (match: RegExpMatchArray | null): string[] => {
-            return match?.[1]?.trim()
-                ? match[1]
-                    .split('\n')
-                    .filter(line => line.trim().startsWith('-'))
-                    .map(line => line.trim().slice(1).trim())
-                    .filter(Boolean)
-                : [];
+        // Parses bullet-pointed list (- item)
+        const parseList = (text: string): string[] => {
+            return text
+                .split('\n')
+                .filter(line => line.trim().startsWith('-'))
+                .map(line => line.trim().slice(1).trim())
+                .filter(Boolean);
         };
 
         return {
-            review: reviewMatch?.[1]?.trim() ?? "No review provided",
-            suggestions: parseList(suggestionsMatch),
-            potentialBugs: parseList(bugsMatch),
-            securityIssues: parseList(securityMatch),
-            refactoredCode: refactoredMatch?.[1]?.trim() ?? code,
+            review: matchSection(['1\\. Code Review:', '\\*\\*Code Review:\\*\\*'], "No review provided"),
+            suggestions: parseList(matchSection(['2\\. Suggestions:', '\\*\\*Suggestions:\\*\\*'])),
+            potentialBugs: parseList(matchSection(['3\\. Potential Bugs:', '\\*\\*Potential Bugs:\\*\\*'])),
+            securityIssues: parseList(matchSection(['4\\. Security Issues:', '\\*\\*Security Issues:\\*\\*'])),
+            refactoredCode: matchSection(['5\\. Refactored Code:', '\\*\\*Refactored Code:\\*\\*'], code),
         };
     } catch (error: unknown) {
         console.error("AI Review Error:", error instanceof Error ? error.message : String(error));
@@ -110,7 +126,6 @@ Respond in this exact format:
     }
 }
 
-// POST /api/code-review - Full code review
 export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
         const body = (await request.json()) as CodeReviewRequest;
