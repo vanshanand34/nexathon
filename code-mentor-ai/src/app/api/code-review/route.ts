@@ -26,22 +26,27 @@ export async function getAIReview(code: string, language: string, description: s
     try {
         const prompt = `You are an expert code reviewer with deep knowledge of ${language}. Review the following code based on the provided description and return a detailed analysis in the exact format specified below. Be thorough, specific, and actionable in your feedback.
 
-Language: ${language}
-Description: ${description}
-Code:
-${code}
+        Language: ${language}
+        Description: ${description}
+        Code:
+        ${code}
 
-Respond in this exact format:
-1.Code Review: [Detailed review]
-2.Suggestions:
-   - [Suggestion 1]
-   - [Suggestion 2]
-3. Potential Bugs:
-   - [Bug 1]
-4. Security Issues:
-   - [Issue 1]
-5. Refactored Code:
-[Refactored code here]`;
+        Respond in this exact format:
+        1. Code Review: [Provide a detailed paragraph reviewing the code's quality, structure, and adherence to best practices for ${language}. Mention specific strengths and weaknesses.]
+        2. Suggestions:
+        - [Specific, actionable suggestion 1 with explanation]
+        - [Specific, actionable suggestion 2 with explanation]
+        - [Add more as needed, or leave empty if none]
+        3. Potential Bugs:
+        - [Specific potential bug 1 with line number if applicable and explanation]
+        - [Specific potential bug 2 with line number if applicable and explanation]
+        - [Add more as needed, or leave empty if none]
+        4. Security Issues:
+        - [Specific security issue 1 with explanation and potential impact]
+        - [Specific security issue 2 with explanation and potential impact]
+        - [Add more as needed, or leave empty if none]
+        5. Refactored Code:
+        [Provide the complete refactored code with improvements applied. If no changes are needed, return the original code unchanged. Include comments explaining changes.]`;
 
         const predictionResponse = await fetch("https://api.replicate.com/v1/predictions", {
             method: "POST",
@@ -75,6 +80,7 @@ Respond in this exact format:
                 for (const output of status.output) {
                     resultText += output;
                 }
+                resultText += '\n**';
                 console.log(resultText);
                 break;
             } else if (status.status === "failed") {
@@ -92,11 +98,6 @@ Respond in this exact format:
             return fallback;
         };
 
-        const review = matchSection(['1\\. Code Review:', '\\*\\*Code Review:\\*\\*']);
-        const suggestionsText = matchSection(['2\\. Suggestions:', '\\*\\*Suggestions:\\*\\*']);
-        const bugsText = matchSection(['3\\. Potential Bugs:', '\\*\\*Potential Bugs:\\*\\*']);
-        const securityText = matchSection(['4\\. Security Issues:', '\\*\\*Security Issues:\\*\\*']);
-        const refactoredCode = matchSection(['5\\. Refactored Code:', '\\*\\*Refactored Code:\\*\\*'], code);
 
         // Parses bullet-pointed list (- item)
         const parseList = (text: string): string[] => {
@@ -106,13 +107,13 @@ Respond in this exact format:
                 .map(line => line.trim().slice(1).trim())
                 .filter(Boolean);
         };
-
+        console.log(matchSection(['Refactored Code:'], code));
         return {
-            review: matchSection(['1\\. Code Review:', '\\*\\*Code Review:\\*\\*'], "No review provided"),
-            suggestions: parseList(matchSection(['2\\. Suggestions:', '\\*\\*Suggestions:\\*\\*'])),
-            potentialBugs: parseList(matchSection(['3\\. Potential Bugs:', '\\*\\*Potential Bugs:\\*\\*'])),
-            securityIssues: parseList(matchSection(['4\\. Security Issues:', '\\*\\*Security Issues:\\*\\*'])),
-            refactoredCode: matchSection(['5\\. Refactored Code:', '\\*\\*Refactored Code:\\*\\*'], code),
+            review: matchSection(['Code Review:'], "No review provided"),
+            suggestions: parseList(matchSection(['Suggestions:'])),
+            potentialBugs: parseList(matchSection(['Potential Bugs:'])),
+            securityIssues: parseList(matchSection(['Security Issues:'])),
+            refactoredCode: matchSection(['Refactored Code:'], code),
         };
     } catch (error: unknown) {
         console.error("AI Review Error:", error instanceof Error ? error.message : String(error));
