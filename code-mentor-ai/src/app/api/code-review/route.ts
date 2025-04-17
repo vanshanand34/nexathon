@@ -1,5 +1,6 @@
 // app/api/code-review/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import getGroqAiReview from '../groq';
 
 export interface CodeReviewRequest {
     code: string;
@@ -18,7 +19,36 @@ export interface CodeReviewResponse {
 const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
 const MODEL_VERSION_ID = "meta/meta-llama-3-8b-instruct"; // Chosen for cost-effective high-volume use
 
-export async function getAIReview(code: string, language: string, description: string): Promise<CodeReviewResponse> {
+const matchSection = (data: string, labels: string[], regexStr: string, fallback = ''): string => {
+    for (const label of labels) {
+        const regex = new RegExp(`${label}${regexStr}`, 'i');
+        const match = data.match(regex);
+        if (match) return match[1].trim();
+    }
+    return fallback;
+};
+
+// Parses bullet-pointed list (- item) and numbered list (1. item)
+const parseList = (text: string, isNumbered: boolean = false): string[] => {
+    return (
+        isNumbered ?
+            text
+                .split('\n')
+                .filter((line, index) => line.trim().startsWith(`${index}.`))
+                .map(line => line.trim().slice(1).trim())
+                .filter(Boolean) :
+            text
+                .split('\n')
+                .filter(line => line.trim().startsWith('-'))
+                .map(line => line.trim().slice(1).trim())
+                .filter(Boolean)
+    );
+
+};
+
+export async function getAIReview(
+    code: string, language: string, description: string
+): Promise<CodeReviewResponse> {
     if (!REPLICATE_API_TOKEN) {
         throw new Error("Replicate API token is not configured");
     }
@@ -64,59 +94,62 @@ export async function getAIReview(code: string, language: string, description: s
                 }
             })
         });
+        let resultText = "";
+        let res: CodeReviewResponse;
 
         const predictionData = await predictionResponse.json();
-        const predictionUrl = predictionData.urls.get;
 
-        let resultText = "";
-        while (true) {
-            const res = await fetch(predictionUrl, {
-                headers: { "Authorization": `Token ${REPLICATE_API_TOKEN}` }
-            });
-            const status = await res.json();
-            if (status.status === "succeeded") {
-                console.log("Replicate prediction succeeded", status, status.output);
-                resultText = "";
-                for (const output of status.output) {
-                    resultText += output;
-                }
-                resultText += '\n**';
-                console.log(resultText);
-                break;
-            } else if (status.status === "failed") {
-                throw new Error("Replicate prediction failed");
+        if (predictionData.status == 402) {
+            // If replicate limit exceeds, switch to groq API
+            const groqAiReview = await getGroqAiReview(code, language, description);
+            resultText += groqAiReview + "\n****";
+            const regexStr = '([\\s\\S]*?)(?=\\n*\\s*(\\d+\\.\\s|\\*\\*[\\s]*|$))';
+            res = {
+                review: matchSection(resultText, ['Code Review:'], regexStr, "No review provided"),
+                suggestions: parseList(matchSection(resultText, ['Suggestions:'], regexStr), false),
+                potentialBugs: parseList(matchSection(resultText, ['Potential Bugs:'], regexStr), false),
+                securityIssues: parseList(matchSection(resultText, ['Security Issues:'], regexStr), false),
+                refactoredCode: matchSection(
+                    resultText, ['Refactored Code:'],
+                    '([\\s\\S]*?)(?=\\n*\\s*(\\*\\*\\*\\*))', code
+                ),
             }
-            await new Promise(r => setTimeout(r, 1000));
+        } else {
+            const predictionUrl = predictionData?.urls?.get;
+            while (true) {
+                const res = await fetch(predictionUrl, {
+                    headers: { "Authorization": `Token ${REPLICATE_API_TOKEN}` }
+                });
+                const status = await res.json();
+                if (status.status === "succeeded") {
+                    resultText = "";
+                    for (const output of status.output) {
+                        resultText += output;
+                    }
+                    resultText += '\n**';
+                    break;
+                } else if (status.status === "failed") {
+                    throw new Error("Replicate prediction failed");
+                }
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            const regexStr = '([\\s\\S]*?)(?=\\n*\\s*(\\d+\\.\\s|\\*\\*[\\s]*|$))';
+            res = {
+                review: matchSection(resultText, ['Code Review'], regexStr, "No review provided"),
+                suggestions: parseList(matchSection(resultText, ['Suggestions'], regexStr)),
+                potentialBugs: parseList(matchSection(resultText, ['Potential Bugs'], regexStr)),
+                securityIssues: parseList(matchSection(resultText, ['Security Issues'], regexStr)),
+                refactoredCode: matchSection(resultText, ['Refactored Code'], regexStr, code),
+            }
+
         }
 
-        const matchSection = (labels: string[], fallback = ''): string => {
-            for (const label of labels) {
-                const regex = new RegExp(`${label}([\\s\\S]*?)(?=\\n\\s*(\\*\\*|\\d+\\.\\s|$))`, 'i');
-                const match = resultText.match(regex);
-                if (match) return match[1].trim();
-            }
-            return fallback;
-        };
+        console.log(res);
+        return res;
 
-
-        // Parses bullet-pointed list (- item)
-        const parseList = (text: string): string[] => {
-            return text
-                .split('\n')
-                .filter(line => line.trim().startsWith('-'))
-                .map(line => line.trim().slice(1).trim())
-                .filter(Boolean);
-        };
-        console.log(matchSection(['Refactored Code:'], code));
-        return {
-            review: matchSection(['Code Review:'], "No review provided"),
-            suggestions: parseList(matchSection(['Suggestions:'])),
-            potentialBugs: parseList(matchSection(['Potential Bugs:'])),
-            securityIssues: parseList(matchSection(['Security Issues:'])),
-            refactoredCode: matchSection(['Refactored Code:'], code),
-        };
     } catch (error: unknown) {
-        console.error("AI Review Error:", error instanceof Error ? error.message : String(error));
+        console.error("AI Review Error:", error instanceof Error ? error.message : String(error), error);
         return {
             review: "Unable to generate review due to API error",
             suggestions: [],
