@@ -10,7 +10,7 @@ import 'prismjs/components/prism-typescript';
 import 'prismjs/themes/prism-tomorrow.css';
 
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { docco, foundation } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 interface CodeReviewRequest {
   code: string;
@@ -43,6 +43,12 @@ export default function Home() {
     setError(null);
     setReviewResult(null);
 
+    if (!formData.code || !formData.description) {
+      setError("Code And Description are required!!");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/code-review', {
         method: 'POST',
@@ -64,7 +70,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen pt-24">
+    <div className="min-h-screen pt-24 pb-12">
       <div className="w-full p-2 sm:p-8 md:px-32">
         <h1
           className="text-2xl sm:text-4xl flex justify-center py-4 pb-8 
@@ -97,7 +103,7 @@ export default function Home() {
         <div className="">
           <div className="w-full grid md:grid-cols-1 gap-y-4 md:gap-8">
             {/* Syntax-highlighted Code Editor */}
-            <div className='bg-white dark:bg-gray-800 shadow rounded-lg border'>
+            <div className='bg-white dark:bg-gray-800 shadow-lg rounded-lg border dark:border-[#ffffff88]'>
               <label
                 className="block text-base sm:text-lg md:text-xl px-4 md:px-8 pt-4 md:pt-6 font-medium text-gray-700 mb-2 dark:text-white"
               >
@@ -111,7 +117,7 @@ export default function Home() {
                     Prism.highlight(code, Prism.languages[formData.language], formData.language)
                   }
                   padding={16}
-                  className="focus:outline-none focus:border-0 outline outline-1 rounded-lg 
+                  className="focus:outline-0 outline-0 focus:border-0 focus:ring-0 rounded-lg 
                   text-sm md:text-base font-mono min-h-[70vh] bg-gray-900"
                   placeholder="Enter your code here..."
                 />
@@ -119,13 +125,14 @@ export default function Home() {
             </div>
 
             {/* Description Input */}
-            <div className='shadow bg-white dark:bg-gray-800 rounded-lg border'>
+            <div className='py-4'>
+            <div className='shadow-lg bg-white dark:bg-gray-800 rounded-lg border dark:border-[#ffffff88]'>
               <label className="block px-4 md:px-8 py-2 pt-4 md:pt-6 text-base sm:text-lg md:text-xl font-medium text-gray-700 dark:text-white ">Description</label>
               <div className="p-3 md:p-6">
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full h-60 p-4 rounded-md bg-gray-900 border border-gray-300 focus:outline-none focus:ring-0 focus:ring-blue-500 text-white"
+                  className="w-full h-60 p-4 rounded-md bg-gray-900 focus:outline-none focus:ring-0 focus:ring-blue-500 text-white"
                   placeholder="Enter a description of your code..."
                   required
                 />
@@ -133,82 +140,102 @@ export default function Home() {
 
 
             </div>
+            </div>
           </div>
+        </div>
+        <div className='flex justify-end items-center py-3 md:py-6'>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="px-3 py-2 sm:px-6 sm:py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+          >
+            {loading ? 'Reviewing...' : 'Get Review'}
+          </button>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="mt-8 p-4 bg-red-100 text-red-700 rounded-md">
-            <p>{error}</p>
+          <div className="mt-8">
+            <div className="bg-red-700 text-white rounded-md p-4 flex justify-between">
+              <p>{error}</p>
+              <span
+                className='text-xl md:text-3xl cursor-pointer hover:text-gray-300'
+                onClick={() => setError("")}  
+              >&times;</span>
+            </div>
           </div>
         )}
 
         {/* Results */}
         {reviewResult && (
-          <div className="mt-8 bg-white p-4 md:p-8 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Review Results</h2>
+          <div className="mt-8 bg-white dark:bg-gray-800 p-4 md:p-8 rounded-lg shadow-lg border">
+            <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">Review Results</h2>
 
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-700">Code Review</h3>
-              <p className="text-gray-600">{reviewResult.review}</p>
-            </div>
+            <div className='p-2 px-4 py-6 d:py-8 rounded-lg dark:bg-gray-900'>
 
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-700 ">Suggestions</h3>
-              {reviewResult.suggestions.length > 0 ? (
-                <ul className="list-disc list-inside text-gray-600">
-                  {reviewResult.suggestions.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-600">No suggestions provided.</p>
-              )}
-            </div>
+              <div className="pb-6">
+                <h3 className="text-lg font-medium text-gray-700 dark:text-white">Code Review</h3>
+                <p className="text-gray-600 dark:text-gray-300">{reviewResult.review}</p>
+              </div>
 
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-700">Potential Bugs</h3>
-              {reviewResult.potentialBugs.length > 0 ? (
-                <ul className="list-disc list-inside text-gray-600">
-                  {reviewResult.potentialBugs.map((b, i) => (
-                    <li key={i}>{b}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-600">No potential bugs identified.</p>
-              )}
-            </div>
+              <div className="pb-6">
+                <h3 className="text-lg font-medium text-gray-700 dark:text-white">Suggestions</h3>
+                {reviewResult.suggestions.length > 0 ? (
+                  <ul className="list-disc list-inside text-gray-600 dark:text-gray-300">
+                    {reviewResult.suggestions.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-600 dark:text-gray-300">No suggestions provided.</p>
+                )}
+              </div>
 
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-700">Security Issues</h3>
-              {reviewResult.securityIssues.length > 0 ? (
-                <ul className="list-disc list-inside text-gray-600">
-                  {reviewResult.securityIssues.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-600">No security issues identified.</p>
-              )}
-            </div>
+              <div className="pb-6">
+                <h3 className="text-lg font-medium text-gray-700 dark:text-white">Potential Bugs</h3>
+                {reviewResult.potentialBugs.length > 0 ? (
+                  <ul className="list-disc list-inside text-gray-600 dark:text-gray-300">
+                    {reviewResult.potentialBugs.map((b, i) => (
+                      <li key={i}>{b}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-600 dark:text-gray-300">No potential bugs identified.</p>
+                )}
+              </div>
 
-            <div>
-              <h3 className="text-lg font-medium text-gray-700">Refactored Code</h3>
-              <div className='text-sm md:text-base'>
-              <SyntaxHighlighter
-                language={formData.language}
-                style={docco}
-                customStyle={{
-                  marginTop: '15px',
-                  padding: '20px',
-                  borderRadius: '5px',
-                  backgroundColor: '#1e1e1e',
-                  overflowX: 'auto',
-                  maxWidth: '100%',
-                }}
-              >
-                {reviewResult.refactoredCode}
-              </SyntaxHighlighter>
+              <div className="pb-6">
+                <h3 className="text-lg font-medium text-gray-700 dark:text-white">Security Issues</h3>
+                {reviewResult.securityIssues.length > 0 ? (
+                  <ul className="list-disc list-inside text-gray-600 dark:text-gray-300">
+                    {reviewResult.securityIssues.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-600 dark:text-gray-300">No security issues identified.</p>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-lg font-medium text-gray-700 dark:text-white">Refactored Code</h3>
+                <div className='text-sm md:text-base text-gray-300'>
+                  <SyntaxHighlighter
+                    language={formData.language}
+                    style={foundation}
+                    customStyle={{
+                      marginTop: '15px',
+                      padding: '20px',
+                      borderRadius: '5px',
+                      backgroundColor: '#141414',
+                      overflowX: 'auto',
+                      maxWidth: '100%',
+                    }}
+                  >
+                    {reviewResult.refactoredCode}
+                  </SyntaxHighlighter>
+                </div>
               </div>
             </div>
           </div>
